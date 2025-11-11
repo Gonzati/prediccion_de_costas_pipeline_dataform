@@ -1,0 +1,5 @@
+defaultProject: rag-vertex-477211
+defaultDataset: Modelo_costas
+defaultAssertionDataset: assertions
+defaultLocation: us-east1
+dataformCoreVersion: 3.0.26
