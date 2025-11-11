@@ -1,0 +1,16 @@
+config {
+  type: "view",
+  name: "forecast_mensual",
+  database: "rag-vertex-477211",
+  schema: "Modelo_costas",
+  tags: ["report"]
+}
+
+SELECT
+  DATE_TRUNC(FECHA_COBRO, MONTH) AS MES_COBRO,
+  COUNT(*) AS NUM_CASOS,
+  ROUND(SUM(COSTAS_PREDICHAS), 2) AS TOTAL_COSTAS_PREDICHAS,
+  ROUND(AVG(COSTAS_PREDICHAS), 2) AS COSTA_MEDIA_PREDICHA
+FROM ${ref("predicciones_detalle")}
+GROUP BY MES_COBRO
+ORDER BY MES_COBRO
