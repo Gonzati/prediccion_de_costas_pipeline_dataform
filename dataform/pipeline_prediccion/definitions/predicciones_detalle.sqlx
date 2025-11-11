@@ -1,0 +1,37 @@
+config {
+  type: "incremental",
+  name: "predicciones_detalle",
+  database: "rag-vertex-477211",
+  schema: "Modelo_costas",
+  uniqueKey: ["row_id"],
+  bigquery: {
+    partitionBy: "DATE_TRUNC(FECHA_COBRO, MONTH)",
+    clusterBy: ["FECHA_COBRO", "FECHA_SENTENCIA"]
+  },
+  tags: ["predict"]
+}
+
+WITH src AS (
+  SELECT
+    CUANTIA,
+    FECHA_SENTENCIA
+  FROM `rag-vertex-477211.Modelo_costas.nuevos_casos_ext`
+  WHERE CUANTIA IS NOT NULL AND FECHA_SENTENCIA IS NOT NULL
+),
+pred AS (
+  SELECT
+    CUANTIA,
+    FECHA_SENTENCIA,
+    predicted_COSTAS
+  FROM ML.PREDICT(
+    MODEL `rag-vertex-477211.Modelo_costas.modelo_costas_lr`,
+    TABLE src
+  )
+)
+SELECT
+  CAST(FARM_FINGERPRINT(CONCAT(CAST(CUANTIA AS STRING), '|', CAST(FECHA_SENTENCIA AS STRING))) AS INT64) AS row_id,
+  ROUND(CUANTIA, 2) AS CUANTIA,
+  FECHA_SENTENCIA,
+  DATE_ADD(FECHA_SENTENCIA, INTERVAL 86 DAY) AS FECHA_COBRO,
+  ROUND(LEAST(50000.0, GREATEST(1.0, predicted_COSTAS)), 2) AS COSTAS_PREDICHAS
+FROM pred
